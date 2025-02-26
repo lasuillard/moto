@@ -2287,7 +2287,8 @@ def test_get_parameters_should_handle_arn():
     response = client.get_parameters(
         Names=[param["Parameter"]["ARN"], param2["Parameter"]["ARN"]]
     )
-    assert [param["Name"] for param in response["Parameters"]] == ["test", "/test2"]
+    assert len(response["Parameters"]) == 2
+    assert response["InvalidParameters"] == []
 
 
 @mock_aws

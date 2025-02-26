@@ -1762,17 +1762,6 @@ class SimpleSystemManagerBackend(BaseBackend):
             )
 
         for name in set(names):
-            # Full ARN
-            if name.startswith(self.ssm_prefix):
-                name = name.replace(self.ssm_prefix, "")
-                try:
-                    param = self.get_parameter(name) or self.get_parameter(
-                        name.lstrip("/")
-                    )
-                    result[name] = param
-                except ParameterVersionNotFound:
-                    pass
-
             if name.split(":")[0] in self._parameters:
                 try:
                     param = self.get_parameter(name)
@@ -1781,6 +1770,24 @@ class SimpleSystemManagerBackend(BaseBackend):
                         result[name] = param
                 except ParameterVersionNotFound:
                     pass
+
+            # Full ARN
+            elif name.startswith(self.ssm_prefix):
+                name = name.replace(self.ssm_prefix, "")
+                param = None
+                try:
+                    param = self.get_parameter(name)
+                except ParameterVersionNotFound:
+                    pass
+
+                try:
+                    param = param or self.get_parameter(name.lstrip("/"))
+                except ParameterVersionNotFound:
+                    pass
+
+                if param is not None:
+                    result[name] = param
+
         return result
 
     def get_parameters_by_path(

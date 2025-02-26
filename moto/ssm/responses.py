@@ -209,6 +209,9 @@ class SimpleSystemManagerResponse(BaseResponse):
 
         valid_param_names = [name for name, parameter in result.items()]
         for name in names:
+            if name.startswith(self.ssm_backend.ssm_prefix):
+                name = name.replace(self.ssm_backend.ssm_prefix, "")
+
             if name not in valid_param_names:
                 response["InvalidParameters"].append(name)
         return json.dumps(response)
