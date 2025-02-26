@@ -2272,6 +2272,19 @@ def test_get_parameters_should_only_return_unique_requests():
 
 
 @mock_aws
+def test_get_parameters_should_handle_arn():
+    client = boto3.client("ssm", region_name=SSM_REGION)
+
+    client.put_parameter(
+        Name="test", Description="A test parameter", Value="value", Type="String"
+    )
+    param = client.get_parameter(Name="test")
+
+    response = client.get_parameters(Names=[param["Parameter"]["ARN"]])
+    assert len(response["Parameters"]) == 1
+
+
+@mock_aws
 def test_get_parameter_history_should_throw_exception_when_MaxResults_is_too_large():
     client = boto3.client("ssm", region_name=SSM_REGION)
     parameter_name = "test-param"
