@@ -2278,10 +2278,16 @@ def test_get_parameters_should_handle_arn():
     client.put_parameter(
         Name="test", Description="A test parameter", Value="value", Type="String"
     )
+    client.put_parameter(
+        Name="/test2", Description="A test parameter", Value="value", Type="String"
+    )
     param = client.get_parameter(Name="test")
+    param2 = client.get_parameter(Name="/test2")
 
-    response = client.get_parameters(Names=[param["Parameter"]["ARN"]])
-    assert len(response["Parameters"]) == 1
+    response = client.get_parameters(
+        Names=[param["Parameter"]["ARN"], param2["Parameter"]["ARN"]]
+    )
+    assert [param["Name"] for param in response["Parameters"]] == ["test", "/test2"]
 
 
 @mock_aws

@@ -1765,7 +1765,13 @@ class SimpleSystemManagerBackend(BaseBackend):
             # Full ARN
             if name.startswith(self.ssm_prefix):
                 name = name.replace(self.ssm_prefix, "")
-                name = name[1:]  # Remove leading slash
+                try:
+                    param = self.get_parameter(name) or self.get_parameter(
+                        name.lstrip("/")
+                    )
+                    result[name] = param
+                except ParameterVersionNotFound:
+                    pass
 
             if name.split(":")[0] in self._parameters:
                 try:
