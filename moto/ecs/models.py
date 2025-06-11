@@ -347,6 +347,19 @@ class TaskDefinition(BaseObject, CloudFormationModel):
             return original_resource
 
 
+class DeleteTaskDefinitionFailure(BaseObject):
+    def __init__(self, reason: str, name: str, account_id: str, region_name: str):
+        self.reason = reason
+        self.arn = name
+
+    @property
+    def response_object(self) -> Dict[str, Any]:  # type: ignore[misc]
+        response_object = self.gen_response_object()
+        response_object["reason"] = self.reason
+        response_object["arn"] = self.arn
+        return response_object
+
+
 class Task(BaseObject, ManagedState):
     def __init__(
         self,
@@ -2447,7 +2460,7 @@ class EC2ContainerServiceBackend(BaseBackend):
 
     def delete_task_definitions(
         self, task_definitions: List[str]
-    ) -> Tuple[List[TaskDefinition], List[Any]]:
+    ) -> Tuple[List[TaskDefinition], List[DeleteTaskDefinitionFailure]]:
         if not task_definitions:
             raise InvalidParameterException(
                 "size of TaskDefinition references list must be greater than 0"
@@ -2467,10 +2480,12 @@ class EC2ContainerServiceBackend(BaseBackend):
                 revision = int(rev)
             else:
                 failures.append(
-                    {
-                        "arn": task_def,
-                        "reason": "The specified task definition identifier is invalid. Specify a valid name or ARN and try again.",
-                    }
+                    DeleteTaskDefinitionFailure(
+                        "The specified task definition identifier is invalid. Specify a valid name or ARN and try again.",
+                        task_def,
+                        self.account_id,
+                        self.region_name,
+                    )
                 )
                 continue
 
@@ -2478,10 +2493,12 @@ class EC2ContainerServiceBackend(BaseBackend):
                 resolved_task_def = self.task_definitions[family].pop(revision)
             except KeyError:
                 failures.append(
-                    {
-                        "arn": task_def,
-                        "reason": "The specified task definition does not exist. Specify a valid account, family, revision and try again.",
-                    }
+                    DeleteTaskDefinitionFailure(
+                        "The specified task definition does not exist. Specify a valid account, family, revision and try again.",
+                        task_def,
+                        self.account_id,
+                        self.region_name,
+                    )
                 )
             else:
                 deleted_task_definitions.append(resolved_task_def)
