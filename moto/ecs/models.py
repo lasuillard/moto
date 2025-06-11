@@ -2503,7 +2503,6 @@ class EC2ContainerServiceBackend(BaseBackend):
             else:
                 deleted_task_definitions.append(resolved_task_def)
 
-        # implement here
         return deleted_task_definitions, failures
 
 
