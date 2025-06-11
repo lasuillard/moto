@@ -1321,7 +1321,9 @@ class EC2ContainerServiceBackend(BaseBackend):
             ):
                 raise TaskDefinitionMemoryError(cd["name"])
 
-    def list_task_definitions(self, family_prefix: str, status: str = "ACTIVE") -> List[str]:
+    def list_task_definitions(
+        self, family_prefix: str, status: str = "ACTIVE"
+    ) -> List[str]:
         task_arns = []
         for task_definition_list in self.task_definitions.values():
             task_arns.extend(
