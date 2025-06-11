@@ -2445,5 +2445,47 @@ class EC2ContainerServiceBackend(BaseBackend):
             return False
         return settings.ecs_new_arn_format()
 
+    def delete_task_definitions(self, task_definitions):
+        if not task_definitions:
+            raise InvalidParameterException(
+                "size of TaskDefinition references list must be greater than 0"
+            )
+
+        if len(task_definitions) > 10:
+            raise InvalidParameterException(
+                "Size of TaskDefinition references list cannot exceed 10"
+            )
+
+        deleted_task_definitions = []
+        failures = []
+        for task_def in task_definitions:
+            task_definition_name = task_def.split("/")[-1]
+            if ":" in task_definition_name:
+                family, rev = task_definition_name.split(":")
+                revision = int(rev)
+            else:
+                failures.append(
+                    {
+                        "arn": task_def,
+                        "reason": "The specified task definition identifier is invalid. Specify a valid name or ARN and try again.",
+                    }
+                )
+                continue
+
+            try:
+                resolved_task_def = self.task_definitions[family].pop(revision)
+            except KeyError:
+                failures.append(
+                    {
+                        "arn": task_def,
+                        "reason": "The specified task definition does not exist. Specify a valid account, family, revision and try again.",
+                    }
+                )
+            else:
+                deleted_task_definitions.append(resolved_task_def)
+
+        # implement here
+        return deleted_task_definitions, failures
+
 
 ecs_backends = BackendDict(EC2ContainerServiceBackend, "ecs")
