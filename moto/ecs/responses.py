@@ -546,12 +546,11 @@ class EC2ContainerServiceResponse(BaseResponse):
         deleted_task_definitions, failures = self.ecs_backend.delete_task_definitions(
             task_definitions=task_definitions,
         )
-        task_definitions = (
-            [
-                task_def.response_object["taskDefinition"]
-                for task_def in deleted_task_definitions
-            ],
-        )
+        task_definitions = [
+            task_def.response_object["taskDefinition"]
+            for task_def in deleted_task_definitions
+        ]
+
         return json.dumps(
             {
                 "taskDefinitions": task_definitions,
