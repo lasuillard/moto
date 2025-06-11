@@ -2445,7 +2445,9 @@ class EC2ContainerServiceBackend(BaseBackend):
             return False
         return settings.ecs_new_arn_format()
 
-    def delete_task_definitions(self, task_definitions):
+    def delete_task_definitions(
+        self, task_definitions: List[str]
+    ) -> Tuple[List[TaskDefinition], List[Any]]:
         if not task_definitions:
             raise InvalidParameterException(
                 "size of TaskDefinition references list must be greater than 0"
