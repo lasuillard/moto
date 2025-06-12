@@ -2514,6 +2514,7 @@ class EC2ContainerServiceBackend(BaseBackend):
                 continue
 
             del self.task_definitions[family][revision]
+            resolved_task_def.status = "DELETE_IN_PROGRESS"
             deleted_task_definitions.append(resolved_task_def)
 
         return deleted_task_definitions, failures

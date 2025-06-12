@@ -34,7 +34,7 @@ def test_delete_task_definitions():
             "revision": 1,
             "volumes": [],
             "compatibilities": ["EC2"],
-            "status": "ACTIVE",
+            "status": "DELETE_IN_PROGRESS",
             "containerDefinitions": [
                 {
                     "cpu": 1024,
