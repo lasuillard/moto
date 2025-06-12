@@ -25,6 +25,7 @@ def test_delete_task_definitions():
         ],
     )
 
+    client.deregister_task_definition(taskDefinition="test_ecs_task:1")
     resp = client.delete_task_definitions(taskDefinitions=["test_ecs_task:1"])
 
     assert resp["taskDefinitions"] == [
@@ -56,6 +57,41 @@ def test_delete_task_definitions():
         }
     ]
     assert resp["failures"] == []
+
+
+@mock_aws
+def test_delete_task_definitions_cannot_delete_active():
+    client = boto3.client("ecs", region_name="us-east-2")
+    task_def_1 = client.register_task_definition(
+        family="test_ecs_task",
+        containerDefinitions=[
+            {
+                "name": "hello_world",
+                "image": "docker/hello-world:latest",
+                "cpu": 1024,
+                "memory": 400,
+                "essential": True,
+                "environment": [
+                    {"name": "AWS_ACCESS_KEY_ID", "value": "SOME_ACCESS_KEY"}
+                ],
+                "logConfiguration": {"logDriver": "json-file"},
+            }
+        ],
+    )
+
+    resp = client.delete_task_definitions(
+        taskDefinitions=[
+            task_def_1["taskDefinition"]["taskDefinitionArn"],
+        ]
+    )
+
+    assert resp["taskDefinitions"] == []
+    assert resp["failures"] == [
+        {
+            "arn": task_def_1["taskDefinition"]["taskDefinitionArn"],
+            "reason": "The specified task definition is still in ACTIVE status. Please deregister the target and try again.",
+        }
+    ]
 
 
 @mock_aws

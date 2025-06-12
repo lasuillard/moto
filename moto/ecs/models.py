@@ -2490,7 +2490,7 @@ class EC2ContainerServiceBackend(BaseBackend):
                 continue
 
             try:
-                resolved_task_def = self.task_definitions[family].pop(revision)
+                resolved_task_def = self.task_definitions[family][revision]
             except KeyError:
                 failures.append(
                     DeleteTaskDefinitionFailure(
@@ -2500,8 +2500,21 @@ class EC2ContainerServiceBackend(BaseBackend):
                         self.region_name,
                     )
                 )
-            else:
-                deleted_task_definitions.append(resolved_task_def)
+                continue
+
+            if resolved_task_def.status == "ACTIVE":
+                failures.append(
+                    DeleteTaskDefinitionFailure(
+                        "The specified task definition is still in ACTIVE status. Please deregister the target and try again.",
+                        task_def,
+                        self.account_id,
+                        self.region_name,
+                    )
+                )
+                continue
+
+            del self.task_definitions[family][revision]
+            deleted_task_definitions.append(resolved_task_def)
 
         return deleted_task_definitions, failures
 
